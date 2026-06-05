@@ -4,27 +4,20 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { Product } from '@/types';
 
-// Stable sig from product id so the same photo always loads for each product
-function idToSig(id: string): number {
-  return id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 1000;
-}
-
-// 4 gallery "views": slightly different sigs of the same keywords → 4 distinct matching photos
 const VIEWS = [
-  { label: 'Vorderseite', sigOffset: 0 },
-  { label: 'Rückseite',   sigOffset: 1 },
-  { label: 'Detail',      sigOffset: 2 },
-  { label: 'Look',        sigOffset: 3 },
+  { label: 'Vorderseite' },
+  { label: 'Rückseite' },
+  { label: 'Detail' },
+  { label: 'Look' },
 ];
 
-function galleryUrl(keywords: string, baseSig: number, offset: number, w: number, h: number) {
-  return `https://source.unsplash.com/featured/${w}x${h}/?${keywords}&sig=${baseSig + offset * 100}`;
+function imageUrl(imageId: string, w: number, h: number) {
+  return `https://images.unsplash.com/photo-${imageId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
 }
 
 export default function ProductImages({ product }: { product: Product }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [errors, setErrors] = useState<Record<number, boolean>>({});
-  const baseSig = idToSig(product.id);
 
   const markError = (i: number) => setErrors((prev) => ({ ...prev, [i]: true }));
   const prev = () => setActiveIdx((i) => (i === 0 ? VIEWS.length - 1 : i - 1));
@@ -42,12 +35,12 @@ export default function ProductImages({ product }: { product: Product }) {
           style={{ background: product.gradient, opacity: errors[activeIdx] ? 1 : 0.3 }}
         />
 
-        {/* Keyword-matched Unsplash photo */}
+        {/* Photo from Unsplash CDN */}
         {!errors[activeIdx] && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={activeIdx}
-            src={galleryUrl(product.imageKeywords, baseSig, activeView.sigOffset, 600, 800)}
+            src={imageUrl(product.imageId, 600, 800)}
             alt={`${product.name} – ${activeView.label}`}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
             onError={() => markError(activeIdx)}
@@ -113,7 +106,6 @@ export default function ProductImages({ product }: { product: Product }) {
               i === activeIdx ? 'border-brand-purple shadow-glow' : 'border-white/10 hover:border-white/30'
             }`}
           >
-            {/* Gradient tint behind photo */}
             <div
               className="absolute inset-0 opacity-30"
               style={{ background: product.gradient }}
@@ -121,7 +113,7 @@ export default function ProductImages({ product }: { product: Product }) {
             {!errors[i] && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={galleryUrl(product.imageKeywords, baseSig, view.sigOffset, 150, 150)}
+                src={imageUrl(product.imageId, 150, 150)}
                 alt={`${product.name} – ${view.label}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={() => markError(i)}
