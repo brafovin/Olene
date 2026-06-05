@@ -4,6 +4,7 @@ import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
+import { productPhotoUrl, productPlaceholder } from '@/lib/productImage';
 
 export default function CartDrawer() {
   const { items, isCartOpen, toggleCart, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
@@ -60,13 +61,17 @@ export default function CartDrawer() {
                 className="flex gap-4 p-4 bg-surface-2 rounded-2xl border border-white/5 hover:border-white/10 transition-all"
               >
                 {/* Product visual */}
-                <div
-                  className="w-20 h-24 rounded-xl flex-shrink-0 overflow-hidden relative"
-                  style={{ background: item.product.gradient }}
-                >
+                <div className="w-20 h-24 rounded-xl flex-shrink-0 overflow-hidden relative bg-surface-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://images.unsplash.com/photo-${item.product.imageId}?auto=format&fit=crop&w=160&h=192&q=70`}
+                    src={productPlaceholder(item.product)}
+                    alt=""
+                    aria-hidden
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={productPhotoUrl(item.product.imageId, 160, 192)}
                     alt={item.product.name}
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

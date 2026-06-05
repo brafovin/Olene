@@ -7,6 +7,7 @@ import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { formatPrice, calculateDiscount } from '@/lib/utils';
+import { productPhotoUrl, productPlaceholder } from '@/lib/productImage';
 import Badge from '@/components/ui/Badge';
 
 interface ProductCardProps {
@@ -20,10 +21,6 @@ const badgeVariantMap: Record<string, 'new' | 'sale' | 'bestseller' | 'limited'>
   Bestseller: 'bestseller',
   Limited: 'limited',
 };
-
-function productImageUrl(imageId: string, w = 600, h = 800) {
-  return `https://images.unsplash.com/photo-${imageId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
-}
 
 export default function ProductCard({ product }: ProductCardProps) {
   const [hovering, setHovering] = useState(false);
@@ -54,14 +51,20 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {/* Image area */}
         <div className="relative aspect-[3/4] overflow-hidden shine-effect">
-          {/* Gradient fallback */}
-          <div className="absolute inset-0" style={{ background: product.gradient }} />
+          {/* Guaranteed fitting illustration (always rendered behind) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={productPlaceholder(product)}
+            alt=""
+            aria-hidden
+            className="absolute inset-0 w-full h-full object-cover"
+          />
 
-          {/* Unsplash CDN photo */}
+          {/* Real Unsplash photo on top — hidden on error to reveal the illustration */}
           {!imgError && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={productImageUrl(product.imageId)}
+              src={productPhotoUrl(product.imageId)}
               alt={product.name}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out"
               style={{ transform: hovering ? 'scale(1.06)' : 'scale(1)' }}

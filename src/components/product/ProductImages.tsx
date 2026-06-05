@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { Product } from '@/types';
+import { productPhotoUrl, productPlaceholder } from '@/lib/productImage';
 
 const VIEWS = [
   { label: 'Vorderseite' },
@@ -10,10 +11,6 @@ const VIEWS = [
   { label: 'Detail' },
   { label: 'Look' },
 ];
-
-function imageUrl(imageId: string, w: number, h: number) {
-  return `https://images.unsplash.com/photo-${imageId}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
-}
 
 export default function ProductImages({ product }: { product: Product }) {
   const [activeIdx, setActiveIdx] = useState(0);
@@ -29,18 +26,21 @@ export default function ProductImages({ product }: { product: Product }) {
     <div className="space-y-4">
       {/* Main image */}
       <div className="relative aspect-[3/4] rounded-3xl overflow-hidden group bg-surface-2">
-        {/* Gradient fallback */}
-        <div
-          className="absolute inset-0 transition-opacity duration-300"
-          style={{ background: product.gradient, opacity: errors[activeIdx] ? 1 : 0.3 }}
+        {/* Guaranteed fitting illustration (always behind) */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={productPlaceholder(product)}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover"
         />
 
-        {/* Photo from Unsplash CDN */}
+        {/* Real photo from Unsplash CDN on top */}
         {!errors[activeIdx] && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={activeIdx}
-            src={imageUrl(product.imageId, 600, 800)}
+            src={productPhotoUrl(product.imageId, 600, 800)}
             alt={`${product.name} – ${activeView.label}`}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
             onError={() => markError(activeIdx)}
@@ -106,14 +106,17 @@ export default function ProductImages({ product }: { product: Product }) {
               i === activeIdx ? 'border-brand-purple shadow-glow' : 'border-white/10 hover:border-white/30'
             }`}
           >
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{ background: product.gradient }}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={productPlaceholder(product)}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover"
             />
             {!errors[i] && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={imageUrl(product.imageId, 150, 150)}
+                src={productPhotoUrl(product.imageId, 200, 200)}
                 alt={`${product.name} – ${view.label}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={() => markError(i)}

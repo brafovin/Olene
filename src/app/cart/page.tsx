@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ShoppingBag, Plus, Minus, Trash2, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
+import { productPhotoUrl, productPlaceholder } from '@/lib/productImage';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, totalPrice, totalItems } = useCart();
@@ -46,13 +47,21 @@ export default function CartPage() {
                 >
                   {/* Product image */}
                   <Link href={`/product/${item.product.id}`} className="flex-shrink-0">
-                    <div
-                      className="w-24 h-28 md:w-28 md:h-32 rounded-xl overflow-hidden"
-                      style={{ background: item.product.gradient }}
-                    >
-                      <div className="w-full h-full flex items-end p-2">
-                        <span className="text-white/60 text-xs">{item.product.category}</span>
-                      </div>
+                    <div className="w-24 h-28 md:w-28 md:h-32 rounded-xl overflow-hidden relative bg-surface-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={productPlaceholder(item.product)}
+                        alt=""
+                        aria-hidden
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={productPhotoUrl(item.product.imageId, 240, 320)}
+                        alt={item.product.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
                     </div>
                   </Link>
 

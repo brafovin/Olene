@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Lock, CreditCard, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { formatPrice } from '@/lib/utils';
+import { productPhotoUrl, productPlaceholder } from '@/lib/productImage';
 
 type Step = 'address' | 'payment' | 'confirm';
 
@@ -387,7 +388,22 @@ export default function CheckoutPage() {
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {items.map((item) => (
                   <div key={`${item.product.id}-${item.selectedSize}`} className="flex items-center gap-3">
-                    <div className="w-12 h-14 rounded-lg flex-shrink-0" style={{ background: item.product.gradient }} />
+                    <div className="w-12 h-14 rounded-lg flex-shrink-0 overflow-hidden relative bg-surface-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={productPlaceholder(item.product)}
+                        alt=""
+                        aria-hidden
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={productPhotoUrl(item.product.imageId, 96, 112)}
+                        alt={item.product.name}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-white text-xs font-medium truncate">{item.product.name}</div>
                       <div className="text-white/40 text-xs">×{item.quantity}</div>
