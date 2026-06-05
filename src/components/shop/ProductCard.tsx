@@ -20,8 +20,13 @@ const badgeVariantMap: Record<string, 'new' | 'sale' | 'bestseller' | 'limited'>
   Limited: 'limited',
 };
 
+function unsplashUrl(id: string, w = 600, h = 800) {
+  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
+}
+
 export default function ProductCard({ product }: ProductCardProps) {
   const [hovering, setHovering] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const { addItem } = useCart();
   const { toggleItem, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
@@ -43,45 +48,32 @@ export default function ProductCard({ product }: ProductCardProps) {
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
       >
-        {/* Image */}
+        {/* Image area */}
         <div className="relative aspect-[3/4] overflow-hidden shine-effect">
+          {/* Gradient fallback – always rendered as background */}
           <div
-            className="absolute inset-0 transition-transform duration-700 ease-out"
-            style={{
-              background: product.gradient,
-              transform: hovering ? 'scale(1.05)' : 'scale(1)',
-            }}
-          >
-            {/* Decorative elements on the gradient */}
-            <div className="absolute inset-0">
-              <div
-                className="absolute top-1/4 right-1/4 w-32 h-32 rounded-full opacity-30 blur-2xl bg-white"
-              />
-              <div
-                className="absolute bottom-1/3 left-1/4 w-24 h-24 rounded-full opacity-20 blur-xl bg-white"
-              />
-              {/* Subtle pattern */}
-              <div
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage:
-                    'repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0px, rgba(255,255,255,0.1) 1px, transparent 1px, transparent 12px)',
-                }}
-              />
-            </div>
-            {/* Category label */}
-            <div className="absolute bottom-4 left-4 right-4">
-              <div className="inline-block bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                <p className="text-white/80 text-xs font-medium uppercase tracking-widest">
-                  {product.category}
-                </p>
-              </div>
-            </div>
-          </div>
+            className="absolute inset-0"
+            style={{ background: product.gradient }}
+          />
+
+          {/* Real photo */}
+          {!imgError && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={unsplashUrl(product.imageId)}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out"
+              style={{ transform: hovering ? 'scale(1.06)' : 'scale(1)' }}
+              onError={() => setImgError(true)}
+            />
+          )}
+
+          {/* Dark gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
           {/* Badge */}
           {product.badge && (
-            <div className="absolute top-3 left-3">
+            <div className="absolute top-3 left-3 z-10">
               <Badge variant={badgeVariantMap[product.badge]}>{product.badge}</Badge>
             </div>
           )}
@@ -89,7 +81,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Wishlist button */}
           <button
             onClick={handleWishlist}
-            className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+            className={`absolute top-3 right-3 z-10 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
               wishlisted
                 ? 'bg-red-500/20 border border-red-500/40 text-red-400'
                 : 'bg-black/40 border border-white/10 text-white/60 opacity-0 group-hover:opacity-100'
@@ -98,9 +90,9 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
           </button>
 
-          {/* Quick add */}
+          {/* Quick add – slides up on hover */}
           <div
-            className={`absolute bottom-0 left-0 right-0 p-4 transition-all duration-300 ${
+            className={`absolute bottom-0 left-0 right-0 p-4 z-10 transition-all duration-300 ${
               hovering ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
             }`}
           >
@@ -127,7 +119,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <span className="text-white/30 text-xs">({product.reviewCount})</span>
           </div>
 
-          {/* Colors */}
+          {/* Color swatches */}
           <div className="flex items-center gap-1.5">
             {product.colors.slice(0, 4).map((c) => (
               <div
@@ -143,18 +135,16 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
 
           {/* Price */}
-          <div className="flex items-center justify-between pt-1">
-            <div className="flex items-center gap-2">
-              <span className="text-white font-bold">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-white/30 text-sm line-through">{formatPrice(product.originalPrice)}</span>
-                  <span className="text-red-400 text-xs font-semibold">
-                    -{calculateDiscount(product.originalPrice, product.price)}%
-                  </span>
-                </>
-              )}
-            </div>
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-white font-bold">{formatPrice(product.price)}</span>
+            {product.originalPrice && (
+              <>
+                <span className="text-white/30 text-sm line-through">{formatPrice(product.originalPrice)}</span>
+                <span className="text-red-400 text-xs font-semibold">
+                  -{calculateDiscount(product.originalPrice, product.price)}%
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

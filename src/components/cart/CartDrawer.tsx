@@ -61,12 +61,16 @@ export default function CartDrawer() {
               >
                 {/* Product visual */}
                 <div
-                  className="w-20 h-24 rounded-xl flex-shrink-0 overflow-hidden"
+                  className="w-20 h-24 rounded-xl flex-shrink-0 overflow-hidden relative"
                   style={{ background: item.product.gradient }}
                 >
-                  <div className="w-full h-full flex items-end p-2">
-                    <div className="text-white/80 text-xs font-medium truncate">{item.product.category}</div>
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://images.unsplash.com/photo-${item.product.imageId}?auto=format&fit=crop&w=160&h=192&q=70`}
+                    alt={item.product.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
                 </div>
 
                 {/* Info */}

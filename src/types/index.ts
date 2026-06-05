@@ -13,6 +13,7 @@ export interface Product {
   longDescription: string;
   sizes: string[];
   colors: Color[];
+  imageId: string;
   gradient: string;
   accentColor: string;
   rating: number;
