@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Heart, ShoppingBag, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Check } from 'lucide-react';
 import { Product } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -28,13 +28,16 @@ function productImageUrl(imageId: string, w = 600, h = 800) {
 export default function ProductCard({ product }: ProductCardProps) {
   const [hovering, setHovering] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [addedSize, setAddedSize] = useState<string | null>(null);
   const { addItem } = useCart();
   const { toggleItem, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddSize = (e: React.MouseEvent, size: string) => {
     e.preventDefault();
-    addItem(product, 'M', product.colors[0]);
+    addItem(product, size, product.colors[0]);
+    setAddedSize(size);
+    setTimeout(() => setAddedSize(null), 1500);
   };
 
   const handleWishlist = (e: React.MouseEvent) => {
@@ -51,13 +54,10 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {/* Image area */}
         <div className="relative aspect-[3/4] overflow-hidden shine-effect">
-          {/* Gradient fallback – always behind the photo */}
-          <div
-            className="absolute inset-0"
-            style={{ background: product.gradient }}
-          />
+          {/* Gradient fallback */}
+          <div className="absolute inset-0" style={{ background: product.gradient }} />
 
-          {/* Real photo from Unsplash CDN */}
+          {/* Unsplash CDN photo */}
           {!imgError && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -69,8 +69,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
           )}
 
-          {/* Bottom gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
+          {/* Bottom gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
 
           {/* Badge */}
           {product.badge && (
@@ -91,19 +91,36 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
           </button>
 
-          {/* Quick-add (slides up on hover) */}
+          {/* Size quick-add (slides up on hover) */}
           <div
-            className={`absolute bottom-0 left-0 right-0 p-4 z-10 transition-all duration-300 ${
-              hovering ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            className={`absolute bottom-0 left-0 right-0 p-3 z-10 transition-all duration-300 ${
+              hovering ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
             }`}
           >
-            <button
-              onClick={handleAddToCart}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl text-white text-sm font-semibold hover:bg-white/20 transition-colors"
-            >
-              <ShoppingBag size={16} />
-              Schnell hinzufügen
-            </button>
+            {addedSize ? (
+              <div className="flex items-center justify-center gap-2 py-2.5 bg-green-500/20 border border-green-500/40 rounded-xl text-green-400 text-sm font-semibold backdrop-blur-md">
+                <Check size={15} />
+                Größe {addedSize} hinzugefügt
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1 justify-center">
+                  <ShoppingBag size={11} className="text-white/50" />
+                  <span className="text-white/50 text-[10px] font-medium uppercase tracking-wider">Größe wählen</span>
+                </div>
+                <div className="flex gap-1.5 justify-center flex-wrap">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={(e) => handleAddSize(e, size)}
+                      className="px-2.5 py-1.5 bg-white/10 backdrop-blur-md border border-white/25 rounded-lg text-white text-xs font-bold hover:bg-white/25 hover:border-white/50 transition-all active:scale-95"
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
