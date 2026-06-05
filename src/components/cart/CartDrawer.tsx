@@ -66,7 +66,7 @@ export default function CartDrawer() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://images.unsplash.com/photo-${item.product.imageId}?auto=format&fit=crop&w=160&h=192&q=70`}
+                    src={`https://source.unsplash.com/featured/160x192/?${item.product.imageKeywords}&sig=${item.product.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 1000}`}
                     alt={item.product.name}
                     className="absolute inset-0 w-full h-full object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

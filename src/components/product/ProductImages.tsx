@@ -4,24 +4,29 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { Product } from '@/types';
 
-// Each gallery view uses a different crop of the same Unsplash photo
+// Stable sig from product id so the same photo always loads for each product
+function idToSig(id: string): number {
+  return id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 1000;
+}
+
+// 4 gallery "views": slightly different sigs of the same keywords → 4 distinct matching photos
 const VIEWS = [
-  { label: 'Vorderseite', crop: 'top',     w: 600, h: 800 },
-  { label: 'Rückseite',   crop: 'center',  w: 600, h: 800 },
-  { label: 'Detail',      crop: 'bottom',  w: 600, h: 800 },
-  { label: 'Look',        crop: 'entropy', w: 600, h: 800 },
+  { label: 'Vorderseite', sigOffset: 0 },
+  { label: 'Rückseite',   sigOffset: 1 },
+  { label: 'Detail',      sigOffset: 2 },
+  { label: 'Look',        sigOffset: 3 },
 ];
 
-function unsplashUrl(id: string, view: (typeof VIEWS)[number]) {
-  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&crop=${view.crop}&w=${view.w}&h=${view.h}&q=85`;
+function galleryUrl(keywords: string, baseSig: number, offset: number, w: number, h: number) {
+  return `https://source.unsplash.com/featured/${w}x${h}/?${keywords}&sig=${baseSig + offset * 100}`;
 }
 
 export default function ProductImages({ product }: { product: Product }) {
   const [activeIdx, setActiveIdx] = useState(0);
   const [errors, setErrors] = useState<Record<number, boolean>>({});
+  const baseSig = idToSig(product.id);
 
   const markError = (i: number) => setErrors((prev) => ({ ...prev, [i]: true }));
-
   const prev = () => setActiveIdx((i) => (i === 0 ? VIEWS.length - 1 : i - 1));
   const next = () => setActiveIdx((i) => (i === VIEWS.length - 1 ? 0 : i + 1));
 
@@ -34,22 +39,22 @@ export default function ProductImages({ product }: { product: Product }) {
         {/* Gradient fallback */}
         <div
           className="absolute inset-0 transition-opacity duration-300"
-          style={{ background: product.gradient, opacity: errors[activeIdx] ? 1 : 0 }}
+          style={{ background: product.gradient, opacity: errors[activeIdx] ? 1 : 0.3 }}
         />
 
-        {/* Real photo */}
+        {/* Keyword-matched Unsplash photo */}
         {!errors[activeIdx] && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={activeIdx}
-            src={unsplashUrl(product.imageId, activeView)}
+            src={galleryUrl(product.imageKeywords, baseSig, activeView.sigOffset, 600, 800)}
             alt={`${product.name} – ${activeView.label}`}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
             onError={() => markError(activeIdx)}
           />
         )}
 
-        {/* Bottom gradient for UI readability */}
+        {/* Bottom gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
 
         {/* View label */}
@@ -108,15 +113,15 @@ export default function ProductImages({ product }: { product: Product }) {
               i === activeIdx ? 'border-brand-purple shadow-glow' : 'border-white/10 hover:border-white/30'
             }`}
           >
-            {/* Gradient fallback */}
+            {/* Gradient tint behind photo */}
             <div
-              className="absolute inset-0"
-              style={{ background: product.gradient, opacity: errors[i] ? 1 : 0.15 }}
+              className="absolute inset-0 opacity-30"
+              style={{ background: product.gradient }}
             />
             {!errors[i] && (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                src={unsplashUrl(product.imageId, { ...view, w: 150, h: 150 })}
+                src={galleryUrl(product.imageKeywords, baseSig, view.sigOffset, 150, 150)}
                 alt={`${product.name} – ${view.label}`}
                 className="absolute inset-0 w-full h-full object-cover"
                 onError={() => markError(i)}
@@ -124,7 +129,7 @@ export default function ProductImages({ product }: { product: Product }) {
             )}
             <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-colors" />
             <div className="absolute inset-0 flex items-end p-1.5">
-              <span className="text-white/70 text-[10px] font-medium drop-shadow">{view.label}</span>
+              <span className="text-white/80 text-[10px] font-medium drop-shadow">{view.label}</span>
             </div>
           </button>
         ))}

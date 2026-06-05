@@ -11,6 +11,7 @@ import Badge from '@/components/ui/Badge';
 
 interface ProductCardProps {
   product: Product;
+  index?: number;
 }
 
 const badgeVariantMap: Record<string, 'new' | 'sale' | 'bestseller' | 'limited'> = {
@@ -20,8 +21,14 @@ const badgeVariantMap: Record<string, 'new' | 'sale' | 'bestseller' | 'limited'>
   Limited: 'limited',
 };
 
-function unsplashUrl(id: string, w = 600, h = 800) {
-  return `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&h=${h}&q=80`;
+// Derive a stable sig (0-999) from the product id so each product
+// always resolves to the same Unsplash photo.
+function idToSig(id: string): number {
+  return id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 1000;
+}
+
+function productImageUrl(keywords: string, sig: number, w = 600, h = 800) {
+  return `https://source.unsplash.com/featured/${w}x${h}/?${keywords}&sig=${sig}`;
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
@@ -30,6 +37,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addItem } = useCart();
   const { toggleItem, isWishlisted } = useWishlist();
   const wishlisted = isWishlisted(product.id);
+  const sig = idToSig(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -50,17 +58,17 @@ export default function ProductCard({ product }: ProductCardProps) {
       >
         {/* Image area */}
         <div className="relative aspect-[3/4] overflow-hidden shine-effect">
-          {/* Gradient fallback – always rendered as background */}
+          {/* Gradient fallback – always behind the photo */}
           <div
             className="absolute inset-0"
             style={{ background: product.gradient }}
           />
 
-          {/* Real photo */}
+          {/* Real photo from Unsplash (keyword-matched) */}
           {!imgError && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={unsplashUrl(product.imageId)}
+              src={productImageUrl(product.imageKeywords, sig)}
               alt={product.name}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out"
               style={{ transform: hovering ? 'scale(1.06)' : 'scale(1)' }}
@@ -68,8 +76,8 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
           )}
 
-          {/* Dark gradient overlay for readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          {/* Bottom gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
           {/* Badge */}
           {product.badge && (
@@ -90,7 +98,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
           </button>
 
-          {/* Quick add – slides up on hover */}
+          {/* Quick-add (slides up on hover) */}
           <div
             className={`absolute bottom-0 left-0 right-0 p-4 z-10 transition-all duration-300 ${
               hovering ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
